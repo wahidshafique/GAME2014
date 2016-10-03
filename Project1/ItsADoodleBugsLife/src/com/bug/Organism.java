@@ -9,6 +9,7 @@ public class Organism {
     final int gridX;
     final int gridY;
     int currPosition;
+    int lastPosition;
     int total;//X and Y multiplied
     int grid[];
 
@@ -26,26 +27,29 @@ public class Organism {
 
     void setElement(int row, int col, int value) {
         int tempPos = row + (col * gridY);
-        System.out.println("curr pos" + currPosition);
-        if (tempPos < total && tempPos >= 0){//as long as the values do not exceed the grid
+        System.out.print("x pos" + row + ", ");
+        System.out.println("y pos" + col);
+        if (tempPos < total && tempPos >= 0 && row > 1 && row < gridX - 1 && col < gridY - 1 && col > 0){//as long as the values do not exceed the grid
             currPosition = tempPos;
             grid[currPosition] = value;
+        } else {
+            setElement(get2DPositionX(this.lastPosition), get2DPositionY(this.lastPosition), 1);
+            System.out.println("OUT OF BOUNDS!!!!");
         }
     }
     void spawn(){//create the entity in a random location on the grid
         total = gridX * gridY;
-        grid = new int[total];//define the maximal len of array
+        grid = new int[total];//define the maximal len of array WRONG THE GRID IS PERSISTENT!!!!!!!TODO: !!!!
         setElement(ThreadLocalRandom.current().nextInt(0, gridX + 1), ThreadLocalRandom.current().nextInt(0, gridY + 1), 1);
     }
 
-    void move(int lastPos) {
-        setElement (get2DPositionX(lastPos), get2DPositionY(lastPos), 0);//get rid of last position
+    void move() {
+        this.lastPosition = currPosition;
+        setElement(get2DPositionX( this.lastPosition), get2DPositionY(this.lastPosition), 0);
         int dirX = ThreadLocalRandom.current().nextInt(-1, 2);
         int dirY = ThreadLocalRandom.current().nextInt(-1, 2);
         setElement (get2DPositionX(currPosition) + dirX, get2DPositionY(currPosition) + dirY, 1);
-
     }
-
     int[] getGrid(){//getter
         return grid;
     }

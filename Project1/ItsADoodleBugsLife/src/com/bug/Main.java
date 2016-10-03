@@ -1,37 +1,38 @@
 package com.bug;
+import javax.swing.*;
 
 public class Main {
-    int gridX = 20;
-    int gridY = 20;
-    int lastPos = 0;
-    int grid[];
+
 
     public static void main(String[] args) {
+//        Organism foo = new Organism(gridX, gridY);//creating just a test organism
+//        foo.spawn();//spawn 1 organmism at random coordinates
 
-        Main main = new Main();
-        Organism foo = new Organism(main.gridX, main.gridY);
-        foo.spawn();
+        JFrame jf = new JFrame("world");
+        jf.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        jf.setSize(500,700);
 
-        while (true) {
-            main.lastPos = foo.getPos();
-            foo.move(main.lastPos);
-            main.grid = foo.getGrid();
-            main.printGrid(main.grid);
-        }
+        jf.add(new Window());
+        jf.setVisible(true);
+        /*while (true) {
+            lastPos = foo.getPos();
+            foo.move(lastPos);
+            try {Thread.sleep(1000);} catch (Exception ex){}
+        }*/
     }
-
-    void printGrid(int[] grid) {
-        int i = 0;
-        for (int item : grid) {
-            i++;
-            if (item != 1)
-                System.out.print("\u2610");
-            else System.out.print("\u03DA");
-            if (i % gridX == 0) {
-                System.out.println();
-            }
-        }
-    }
+//
+//    static void makeStringyGrid(int[] grid) {
+//        for (int i = 1; i < grid.length; i++) {
+//            if (grid[i] == 1){
+//                stringyGrid = stringyGrid.concat("\u03DA");
+//            } else {
+//                stringyGrid = stringyGrid.concat("\u2610");
+//            }
+//            if (i % gridX == 0){
+//                stringyGrid = stringyGrid.concat("\n");
+//            }
+//        }
+//    }
 }
 
 

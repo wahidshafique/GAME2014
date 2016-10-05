@@ -50,7 +50,7 @@ public class DoodleBug extends Organism {
                 alive = false;
                 System.out.println("DOODLE DEAD");
             }
-            return (ate) ? super.grid : super.move(grid);
+            return (ate && alive) ? super.grid : super.move(super.grid);
         } else {
             remElement(get2DPositionX(super.currPosition), get2DPositionY(super.currPosition));
             Window.doodleBugs.remove(this);

@@ -1,21 +1,30 @@
 package com.bug;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ThreadLocalRandom;
-
+import java.util.function.IntConsumer;
+import java.util.function.IntFunction;
 
 /**
  * Created by Wahid on 9/29/2016.
  */
-public class Organism {
+public abstract class Organism {
     final int gridX;
     final int gridY;
-    int currPosition;
-    int lastPosition;
+    int currPosition = 0;
+    int lastPosition = 0;
+    int tempPos;
     int total;//X and Y multiplied
     int grid[];
 
-    Organism(int gridX, int gridY) {//supply constructor with organism grid params
+    private int creatureNum;
+    private int age = 0;
+    int breedingAgeInterval = 100;
+
+    Organism(int gridX, int gridY, int grid[]) {//supply constructor with organism grid params
         this.gridX = gridX;
         this.gridY = gridY;
+        this.grid = grid;
+        total = gridX * gridY;
     }
     //get the positions of the Organisms in 2d coordinates
     int get2DPositionX (int curr) {
@@ -24,49 +33,99 @@ public class Organism {
     int get2DPositionY (int curr) {
         return curr / gridY;
     }
+    int get1DPosition (int row, int col) {
+        return row + (col * gridY);
+    }
 
-    void setElement(int row, int col, int value) {
-        int tempPos = row + (col * gridY);
-        System.out.print("x pos" + row + ", ");
-        System.out.println("y pos" + col);
-        if (tempPos < total && tempPos >= 0 && row > 1 && row < gridX - 1 && col < gridY - 1 && col > 0){//as long as the values do not exceed the grid
+    void setElement(int row, int col) {
+            tempPos = get1DPosition(row,col);
             currPosition = tempPos;
-            grid[currPosition] = value;
-        } else {
-            setElement(get2DPositionX(this.lastPosition), get2DPositionY(this.lastPosition), 1);
-            System.out.println("OUT OF BOUNDS!!!!");
-        }
-    }
-    void spawn(){//create the entity in a random location on the grid
-        total = gridX * gridY;
-        grid = new int[total];//define the maximal len of array WRONG THE GRID IS PERSISTENT!!!!!!!TODO: !!!!
-        setElement(ThreadLocalRandom.current().nextInt(0, gridX + 1), ThreadLocalRandom.current().nextInt(0, gridY + 1), 1);
-    }
+            grid[currPosition] = creatureNum;
+            lastPosition = currPosition;
 
-    void move() {
-        this.lastPosition = currPosition;
-        setElement(get2DPositionX( this.lastPosition), get2DPositionY(this.lastPosition), 0);
-        int dirX = ThreadLocalRandom.current().nextInt(-1, 2);
-        int dirY = ThreadLocalRandom.current().nextInt(-1, 2);
-        setElement (get2DPositionX(currPosition) + dirX, get2DPositionY(currPosition) + dirY, 1);
-    }
-    int[] getGrid(){//getter
+        }
+
+     void remElement(int row, int col) {
+         int pos = get1DPosition(row,col);
+         grid[pos] = 0;
+     }
+
+     int[] breed (int row, int col) {//
+         grid[get1DPosition(row, col)] = creatureNum;
+         System.out.println("SPAWNED FIXED");
+         return grid;
+     }
+
+     void breedSniff(int row, int col) {
+         tempPos = get1DPosition(row, col);
+         if ((tempPos < total && tempPos > 0) && (row > 0 && row < gridX - 1) && (col < gridY - 1 && col > 0)) {//as long as the values do not exceed the grid
+             if (grid[get1DPosition(row, col - 1)] == 0) {//check if top is clear
+                 breed (row, col - 1);
+             } else if (grid[get1DPosition(row + 1, col)] == 0) {//check right
+                 breed (row + 1, col);
+             } else if (grid[get1DPosition(row, col + 1)] == 0) {//check bottom
+                 breed (row, col + 1);
+             } else if (grid[get1DPosition(row - 1, col)] == 0) {//check left
+                 breed (row - 1, col);
+             }
+         }
+     }
+
+    void sniff (int row, int col) {
+        tempPos = get1DPosition(row,col);
+        if ((tempPos < total && tempPos > 0) && (row > 0 && row < gridX - 1) && (col < gridY - 1 && col > 0)) {//as long as the values do not exceed the grid
+            if (grid[get1DPosition(row, col)] == 0) {
+                setElement(row, col);
+
+            } else if (grid[get1DPosition(row, col - 1)] == 0) {//check if top is clear
+                setElement(row, col - 1);
+
+            } else if (grid[get1DPosition(row + 1, col)] == 0) {//check right
+                setElement(row + 1, col);
+
+            } else if (grid[get1DPosition(row, col + 1)] == 0) {//check bottom
+                setElement(row, col + 1);
+
+            } else if (grid[get1DPosition(row - 1, col)] == 0) {//check left
+                setElement(row - 1, col);
+            }
+        } else {
+            lastPosition = currPosition;
+            setElement(get2DPositionX( lastPosition), get2DPositionY(lastPosition));
+            System.out.println("Stay");}
+}
+
+    int[] spawn(){//create the entity in a random location on the grid
+        sniff(ThreadLocalRandom.current().nextInt(0, gridX + 1), ThreadLocalRandom.current().nextInt(0, gridY + 1));
+        System.out.println("SPAWNED RANDOM");
         return grid;
     }
-    int getPos(){
-        return currPosition;
+
+    int[] move(int[] grid) {//basically random, the basis for any simple organism
+        //follows chess like pattern to sometimes squeeze over obstacles to avoid cornering and behave sort of like
+        //real bugs
+        age++;
+            remElement(get2DPositionX(lastPosition), get2DPositionY(lastPosition));//rm last pos
+            int dirX = setRandom();
+            int dirY = setRandom();
+
+            sniff(get2DPositionX(currPosition) + dirX, get2DPositionY(currPosition) + dirY);
+            if (age % breedingAgeInterval == 0) {
+                breedSniff(get2DPositionX(currPosition), get2DPositionY(currPosition));
+            }
+            return grid;
+        }
+
+    int setRandom(){
+        int val = ThreadLocalRandom.current().nextInt(-1, 2);
+        return val != 0 ? val : setRandom();
+}
+    void setCreatureNum(int x) {
+        if (x == 1 || x == 2) {
+            this.creatureNum = x;
+        } else {
+            throw new IllegalArgumentException("Setting the grid number for creature can only be 1 or 2");
+        }
     }
 
-
-    /*
-    an Organism is the parent class of Ant and Doodlebug
-    It has a STRICT boundary limit, basic movement patterns and behaviour
-
-       This class holds position values for each generated critter,
-       so that the child critter knows where its siblings are,
-
-       if a critter is a 2x2, then everyone will know he is there, and of what type he is
-
-
-     */
 }

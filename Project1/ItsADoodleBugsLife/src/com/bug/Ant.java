@@ -7,19 +7,28 @@ public class Ant extends Organism{
     Ant(int gridX, int gridY, int grid[]) {
         super(gridX, gridY, grid);
         setCreatureNum(2);
-        super.breedingAgeInterval = 3;
+        breedingAgeInterval = 3;
     }
 
     @Override
     int[] move(int[] grid) {
-        return super.move(grid);
+        age++;
+        super.move(grid);
+        if (age % breedingAgeInterval == 0) {
+            breedSniff(get2DPositionX(currPosition), get2DPositionY(currPosition));
+        }
+        return grid;
     }
 
     @Override
-    int[] breed(int row, int col) {
-        Window.ants.add(Window.ants.size() - 1, new Ant(gridX,gridY,grid));
-        return super.breed(row, col);
+    void breed(int row, int col) {
+        Organism newAnt = new Ant(gridX, gridY, grid);
+        newAnt.setElement(row, col);
+        Window.ants.add(Window.ants.size(), newAnt);
     }
 
+    public int getPos(){
+        return currPosition;
+    }
 
 }

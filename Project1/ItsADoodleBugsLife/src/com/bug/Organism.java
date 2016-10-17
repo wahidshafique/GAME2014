@@ -1,9 +1,5 @@
 package com.bug;
-import java.util.concurrent.Callable;
 import java.util.concurrent.ThreadLocalRandom;
-import java.util.function.IntConsumer;
-import java.util.function.IntFunction;
-
 /**
  * Created by Wahid on 9/29/2016.
  */
@@ -17,7 +13,7 @@ public abstract class Organism {
     int grid[];
 
     private int creatureNum;
-    private int age = 0;
+    int age = 0;
     int breedingAgeInterval = 100;
 
     Organism(int gridX, int gridY, int grid[]) {//supply constructor with organism grid params
@@ -42,18 +38,16 @@ public abstract class Organism {
             currPosition = tempPos;
             grid[currPosition] = creatureNum;
             lastPosition = currPosition;
-
         }
 
-     void remElement(int row, int col) {
+     int[] remElement(int row, int col) {
          int pos = get1DPosition(row,col);
          grid[pos] = 0;
+         return grid;
      }
 
-     int[] breed (int row, int col) {//
+     void breed (int row, int col) {//
          grid[get1DPosition(row, col)] = creatureNum;
-         System.out.println("SPAWNED FIXED");
-         return grid;
      }
 
      void breedSniff(int row, int col) {
@@ -68,6 +62,8 @@ public abstract class Organism {
              } else if (grid[get1DPosition(row - 1, col)] == 0) {//check left
                  breed (row - 1, col);
              }
+         } else {
+             move(grid);
          }
      }
 
@@ -90,9 +86,8 @@ public abstract class Organism {
                 setElement(row - 1, col);
             }
         } else {
-            lastPosition = currPosition;
-            setElement(get2DPositionX( lastPosition), get2DPositionY(lastPosition));
-            System.out.println("Stay");}
+            setElement(get2DPositionX(lastPosition), get2DPositionY(lastPosition));
+        }
 }
 
     int[] spawn(){//create the entity in a random location on the grid
@@ -104,15 +99,16 @@ public abstract class Organism {
     int[] move(int[] grid) {//basically random, the basis for any simple organism
         //follows chess like pattern to sometimes squeeze over obstacles to avoid cornering and behave sort of like
         //real bugs
-        age++;
+        //lastPosition = currPosition;
+
             remElement(get2DPositionX(lastPosition), get2DPositionY(lastPosition));//rm last pos
             int dirX = setRandom();
             int dirY = setRandom();
 
             sniff(get2DPositionX(currPosition) + dirX, get2DPositionY(currPosition) + dirY);
-            if (age % breedingAgeInterval == 0) {
-                breedSniff(get2DPositionX(currPosition), get2DPositionY(currPosition));
-            }
+//            if (age % breedingAgeInterval == 0) {
+//                breedSniff(get2DPositionX(currPosition), get2DPositionY(currPosition));
+//            }
             return grid;
         }
 
@@ -126,6 +122,9 @@ public abstract class Organism {
         } else {
             throw new IllegalArgumentException("Setting the grid number for creature can only be 1 or 2");
         }
+    }
+    int getPos(){
+        return currPosition;
     }
 
 }

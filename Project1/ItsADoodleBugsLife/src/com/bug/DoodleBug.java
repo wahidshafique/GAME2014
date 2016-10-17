@@ -6,20 +6,26 @@ package com.bug;
 public class DoodleBug extends Organism {
     int index;
     int hunger = 3;
-    Boolean ate = false;
-    Boolean alive = true;
+    boolean ate = false;
 
     DoodleBug(int gridX, int gridY, int grid[]) {
         super(gridX, gridY, grid);
         setCreatureNum(1);
-        super.breedingAgeInterval = 8;
+        breedingAgeInterval = 8;
     }
 
     void eat(int row, int col) {
         System.out.println("doodle eat");
-        ate = true;
         hunger++;
+
+        for (int i = 0; i < Window.ants.size() ; i++) {
+            if (Window.ants.get(i).getPos() == get1DPosition(row,col)){
+                Window.ants.get(i).remElement(row, col);
+                Window.ants.remove(i);
+            }
+        }
         setElement(row, col);
+        ate = true;
     }
 
     void eatSniff(int row, int col) {
@@ -35,33 +41,36 @@ public class DoodleBug extends Organism {
                 eat(row - 1, col);
             }
         } else {
-            ate = false;
+            super.move(grid);
         }
     }
 
     @Override
     int[] move(int[] grid) {
-        if (alive) {
-            hunger--;
-            if (hunger != 0) {
-                eatSniff(get2DPositionX(super.currPosition), get2DPositionY(super.currPosition));
-            } else {
-                remElement(get2DPositionX(super.currPosition), get2DPositionY(super.currPosition));
-                alive = false;
-                System.out.println("DOODLE DEAD");
-            }
-            return (ate && alive) ? super.grid : super.move(super.grid);
-        } else {
-            remElement(get2DPositionX(super.currPosition), get2DPositionY(super.currPosition));
+
+        ate = false;
+        hunger--;
+        if (hunger != 0) {//if you are not starving
+            age++;
+            eatSniff(get2DPositionX(currPosition), get2DPositionY(currPosition));
+
+        } else {//dead
+            System.out.println("doodle dead");
+            remElement(get2DPositionX(currPosition), get2DPositionY(currPosition));
             Window.doodleBugs.remove(this);
-            return super.grid;
+            return grid;
         }
+        if(ate)
+            return grid;
+        else return super.move(grid);
     }
 
     @Override
-    int[] breed(int row, int col) {
+    void breed(int row, int col) {
         System.out.println("doodle breed");
-        Window.doodleBugs.add(Window.doodleBugs.size() - 1, new DoodleBug(gridX,gridY,grid));
-        return super.breed(row, col);
+        Organism newDood = new DoodleBug(gridX, gridY, grid);
+        newDood.setElement(row, col);
+        Window.doodleBugs.add(Window.doodleBugs.size(), newDood);
+
     }
 }

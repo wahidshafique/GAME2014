@@ -14,9 +14,9 @@ public class Window extends JPanel {
     final int numAnts;
     final int timeStep;
 
-    public static ArrayList<Organism> doodleBugs;
-    public static ArrayList<Organism> ants;
-    int[] grid;//need this because each organism should know the univ grid state
+    public  static ArrayList<Organism> doodleBugs;
+    public  static ArrayList<Organism> ants;
+    public  int[] grid;//need this because each organism should know the univ grid state
 
     Window(int numDoodle, int numAnts, int timeStep){
         this.numDoodle = numDoodle;
@@ -24,7 +24,7 @@ public class Window extends JPanel {
         this.timeStep = timeStep;
 
         grid = new int[gridX * gridY];//now we have an initial 0 filled empty world
-        doodleBugs = new ArrayList<>();//accounting for maximal insect population in init
+        doodleBugs = new ArrayList<>();//grows dynamically if need to add insects
         ants = new ArrayList<>();
 
         for (int i = 0; i < this.numDoodle; i++) {//create and spawn the doodleBugs
@@ -68,7 +68,7 @@ public class Window extends JPanel {
         g2.setFont(font);
         g2.setColor(Color.black);
         drawString(g,makeStringyGrid(grid) ,50,70);
-
+;
         for (int i = 0; i < doodleBugs.size() ; i++) {
             grid = doodleBugs.get(i).move(grid);
         }

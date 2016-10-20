@@ -2,54 +2,53 @@ package com.bug;
 
 import javax.swing.*;
 import java.awt.*;
-import java.util.ArrayList;
+import java.util.concurrent.ThreadLocalRandom;
 
-/**
- * Created by Wahid on 10/2/2016.
- */
 public class Window extends JPanel {
     final int gridX = 20;
     final int gridY = 20;
     final int numDoodle;
     final int numAnts;
     final int timeStep;
-
-    public  static ArrayList<Organism> doodleBugs;
-    public  static ArrayList<Organism> ants;
-    public  int[] grid;//need this because each organism should know the univ grid state
+    private static Organism[][] univGrid;//need this because each organism should know the univ grid state
 
     Window(int numDoodle, int numAnts, int timeStep){
         this.numDoodle = numDoodle;
         this.numAnts = numAnts;
         this.timeStep = timeStep;
 
-        grid = new int[gridX * gridY];//now we have an initial 0 filled empty world
-        doodleBugs = new ArrayList<>();//grows dynamically if need to add insects
-        ants = new ArrayList<>();
+        univGrid = new Organism[gridX][gridY];//now we have an initial 0 filled empty 'world'
 
         for (int i = 0; i < this.numDoodle; i++) {//create and spawn the doodleBugs
-            doodleBugs.add(i, new DoodleBug(gridX,gridY,grid));
-            grid = doodleBugs.get(i).spawn();
+            int gridXpos = ThreadLocalRandom.current().nextInt(0, gridX - 1);
+            int gridYpos = ThreadLocalRandom.current().nextInt(0, gridY - 1);
+            if (get(gridXpos,gridYpos) == null) {
+            set(gridXpos,gridYpos, new DoodleBug(this, gridXpos,gridYpos));
+            }
         }
+
         for (int i = 0; i < this.numAnts; i++) {//create and spawn the ants
-            ants.add(i, new Ant(gridX,gridY,grid));
-            grid = ants.get(i).spawn();
+            int gridXpos = ThreadLocalRandom.current().nextInt(0, gridX - 1);
+            int gridYpos = ThreadLocalRandom.current().nextInt(0, gridY - 1);
+            if (get(gridXpos,gridYpos) == null) {
+            set(gridXpos,gridYpos, new Ant(this, gridXpos,gridYpos));
+            }
         }
     }
 
-    String makeStringyGrid(int[] grid) {
-        String stringyGrid = "";
-        for (int i = 1; i < grid.length; i++) {
-            if (grid[i] == 1){//DOODLE
-                stringyGrid = stringyGrid.concat("D");
-            } else if (grid[i] == 2){//ANT
-                stringyGrid = stringyGrid.concat("A");
-            } else {
-                stringyGrid = stringyGrid.concat(" ");
+    String makeStringyGrid() {
+        String stringyGrid = "";//store a string to be output
+        for (int i = 0; i < gridX; i++) {
+            for (int j = 0; j < gridY; j++) {
+                if (univGrid[i][j] instanceof DoodleBug) {//DOODLE
+                    stringyGrid = stringyGrid.concat("D");
+                } else if (univGrid[i][j] instanceof Ant) {//ANT
+                    stringyGrid = stringyGrid.concat("A");
+                } else if (univGrid[i][j] == null){
+                    stringyGrid = stringyGrid.concat("_");
+                }
             }
-            if (i % 20 == 0){
-                stringyGrid = stringyGrid.concat("\n");
-            }
+            stringyGrid = stringyGrid.concat("\n");//this sets new line at every 20
         }
         return stringyGrid;
     }
@@ -61,22 +60,48 @@ public class Window extends JPanel {
     }
 
     public void paint(Graphics g) {//one pass is a time step
-        //time-step dependent on thread. Good enough our purposes
+        //time-step dependent on thread. Good enough
         super.paint(g);
         Graphics2D g2 = (Graphics2D) g;
-        Font font = new Font("Monospaced",Font.BOLD+Font.PLAIN, 20);
+        Font font = new Font("Monospaced",Font.BOLD+Font.PLAIN, 20);//monospace
         g2.setFont(font);
         g2.setColor(Color.black);
-        drawString(g,makeStringyGrid(grid) ,50,70);
-;
-        for (int i = 0; i < doodleBugs.size() ; i++) {
-            grid = doodleBugs.get(i).move(grid);
-        }
-        for (int i = 0; i < ants.size(); i++) {
-            grid = ants.get(i).move(grid);
-        }
+        drawString(g,makeStringyGrid(),50,70);
 
-        try {Thread.sleep(timeStep);} catch (Exception ex){}
+        for (int i = 0; i < gridX; i++) {//reset everything
+            for (int j = 0; j < gridY; j++) {
+                if (get(i,j) != null) {
+                    get(i, j).stop();
+                }
+            }
+        }
+        runBugs(DoodleBug.class);
+        runBugs(Ant.class);
+
+        try {Thread.sleep(timeStep);} catch (Exception ex){}//pause for the specified timestep
         repaint();
+    }
+    //http://stackoverflow.com/questions/9644045/passing-an-argument-to-be-used-by-instanceof
+    void runBugs(Class<?> bug) {
+        for (int i = 0; i < gridX; i++) {//Ant second
+            for (int j = 0; j < gridY; j++) {
+                if (get(i,j) != null && get(i,j).getClass().equals(bug)) {
+                    get(i, j).run();
+                }
+            }
+        }
+    }
+
+    public Organism get(int x, int y) {
+        if(!inGrid(x, y))return null;
+        return univGrid[x][y];
+    }
+
+    public void set (int x, int y, Organism creature) {//simple set used for Organism
+            univGrid[x][y] = creature;
+    }
+    public boolean inGrid(int x, int y) {//checks if you are even in the grid
+        if(x >= gridX || x < 0 || y >= gridY || y < 0) return false;
+        return true;
     }
 }

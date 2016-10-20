@@ -1,76 +1,39 @@
 package com.bug;
 
-/**
- * Created by Wahid on 10/2/2016.
- */
 public class DoodleBug extends Organism {
-    int index;
     int hunger = 3;
-    boolean ate = false;
-
-    DoodleBug(int gridX, int gridY, int grid[]) {
-        super(gridX, gridY, grid);
-        setCreatureNum(1);
+    DoodleBug(Window world, int x, int y) {
+        super(world,x,y);
         breedingAgeInterval = 8;
     }
 
-    void eat(int row, int col) {
-        System.out.println("doodle eat");
-        hunger++;
-
-        for (int i = 0; i < Window.ants.size() ; i++) {
-            if (Window.ants.get(i).getPos() == get1DPosition(row,col)){
-                Window.ants.get(i).remElement(row, col);
-                Window.ants.remove(i);
-            }
-        }
-        setElement(row, col);
-        ate = true;
-    }
-
-    void eatSniff(int row, int col) {
-        tempPos = get1DPosition(row, col);
-        if ((tempPos < total && tempPos > 0) && (row > 0 && row < gridX - 1) && (col < gridY - 1 && col > 0)) {//as long as the values do not exceed the grid
-            if (grid[get1DPosition(row, col - 1)] == 2) {//check if top is full of ant
-                eat(row, col - 1);
-            } else if (grid[get1DPosition(row + 1, col)] == 2) {
-                eat(row + 1, col);
-            } else if (grid[get1DPosition(row, col + 1)] == 2) {
-                eat(row, col + 1);
-            } else if (grid[get1DPosition(row - 1, col)] == 2) {
-                eat(row - 1, col);
-            }
-        } else {
-            super.move(grid);
-        }
-    }
-
-    @Override
-    int[] move(int[] grid) {
-
-        ate = false;
+    protected boolean canMove() {//if you can eat an ant, you eat and do not move
+        if(eatAnt(xPos + 1, yPos)) return false;
+        else if(eatAnt(xPos - 1, yPos)) return false;
+        else if(eatAnt(xPos, yPos + 1)) return false;
+        else if(eatAnt(xPos, yPos - 1)) return false;
         hunger--;
-        if (hunger != 0) {//if you are not starving
-            age++;
-            eatSniff(get2DPositionX(currPosition), get2DPositionY(currPosition));
-
-        } else {//dead
-            System.out.println("doodle dead");
-            remElement(get2DPositionX(currPosition), get2DPositionY(currPosition));
-            Window.doodleBugs.remove(this);
-            return grid;
+        if(hunger == 0) {
+            world.set(xPos,yPos,null);//doodle dies
+            return false;
         }
-        if(ate)
-            return grid;
-        else return super.move(grid);
+        return true;
+    }
+    private boolean eatAnt(int tempX, int tempY) {
+        Organism tempOrg = world.get(tempX,tempY);
+        if(world.inGrid(tempX, tempY) && tempOrg != null && tempOrg instanceof Ant)
+        {
+            hunger = 3;
+            world.set(xPos, yPos, null);//remove ant first
+            world.set(tempX, tempY, this);//set yourself
+            this.xPos = tempX;
+            this.yPos = tempY;
+            return true;
+        }
+        return false;
     }
 
-    @Override
-    void breed(int row, int col) {
-        System.out.println("doodle breed");
-        Organism newDood = new DoodleBug(gridX, gridY, grid);
-        newDood.setElement(row, col);
-        Window.doodleBugs.add(Window.doodleBugs.size(), newDood);
-
+    protected void birth(int newX, int newY) {
+        world.set(newX, newY, new DoodleBug(world, newX, newY));
     }
 }
